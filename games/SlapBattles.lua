@@ -1,3 +1,46 @@
+if shared.debug then
+    loadDebugMode = true
+    loadWorkspace = true
+else
+    loadDebugMode = false
+    loadWorkspace = true
+end
+local lplr = game.Players.LocalPlayer
+local plrs = game.Players
+local looptable = {}
+local function doLoop(name,func)
+    if looptable[name] == nil then
+        looptable[name] = game:GetService("RunService").Stepped:Connect(func)
+    end
+end
+local function endLoop(name)
+    if looptable[name] then
+        looptable[name]:Disconnect()
+        looptable[name] = nil
+    end
+end
+local function notif(text)
+	game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = text})
+end
+local colors = {
+    SchemeColor = Color3.fromRGB(255,75,255),
+    Background = Color3.fromRGB(255,175,255),
+    Header = Color3.fromRGB(255,145,255),
+    TextColor = Color3.fromRGB(255,255,255),
+    ElementColor = Color3.fromRGB(235,165,245)
+}
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("qwertyware - 1.1", colors)
+local MainTab = Window:NewTab("Main")
+local Main = MainTab:NewSection("Main")
+local AutoTab = Window:NewTab("Automated")
+local Auto = AutoTab:NewSection("Automated")
+local CombatTab = Window:NewTab("Combat")
+local Combat = CombatTab:NewSection("Combat")
+local PlayerTab = Window:NewTab("Player")
+local Player = PlayerTab:NewSection("Player")
+local WorldTab = Window:NewTab("World")
+local World = WorldTab:NewSection("World")
 local byp
 byp = hookmetamethod(game, "__namecall", function(method, ...) 
 if getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.Ban then
@@ -195,24 +238,6 @@ local hit = {
     ["God's Hand"] = game.ReplicatedStorage.Godshand,
     ["Error"] = game.ReplicatedStorage.Errorhit
 }
-local looptable = {}
-local function doLoop(name,func)
-    if looptable[name] == nil then
-        looptable[name] = game:GetService("RunService").Stepped:Connect(func)
-    end
-end
-local function endLoop(name)
-    if looptable[name] then
-        looptable[name]:Disconnect()
-        looptable[name] = nil
-    end
-end
-local CombatTab = shared.mainWin:NewTab("Combat")
-local Combat = CombatTab:NewSection("Combat")
-local PlayerTab = shared.mainWin:NewTab("Player")
-local Player = PlayerTab:NewSection("Player")
-local WorldTab = shared.mainWin:NewTab("World")
-local World = WorldTab:NewSection("World")
 local function glove()
     return game.Players.LocalPlayer.leaderstats.Glove.Value
 end
@@ -266,14 +291,14 @@ Auto:NewToggle("AutoFarm","",function(cb)
         afon = false
     end
 end)
-local auramode = "Blatant"
-Combat:NewDropdown("Mode","", {"Blatant","Sync","Legit","Semi-Legit"},function(cb)
+local auramode = "Normal"
+Combat:NewDropdown("Mode","", {"Normal","Legit","Semi-Legit"},function(cb)
     auramode = cb
 end)
 local doSlapAnim = false
 local waittime = 0.25
 local setvalue = 0.25
-Combat:NewSlider("Delay", "", 100, 25, function(s) -- 500 (MaxValue) | 0 (MinValue)
+Combat:NewSlider("Delay", "Doesn't apply to killstreak.", 100, 25, function(s) -- 500 (MaxValue) | 0 (MinValue)
     setvalue = s/100
     waitime = s/100
 end)
@@ -292,7 +317,7 @@ Combat:NewToggle("Aura","",function(cb)
                     local dist = (lplr.Character:FindFirstChild("HumanoidRootPart").Position - plr.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
                     --print("checks passed")
                     waittime = setvalue
-                    if (auramode == "Blatant" and dist <= 25 or auramode == "Sync" and dist <= 25 or auramode == "Legit" and dist <= 9.25 or auramode == "Semi-Legit" and dist <= 12.45) then
+                    if (auramode == "Normal" and dist <= 25 or auramode == "Legit" and dist <= 9.25 or auramode == "Semi-Legit" and dist <= 12.45) then
                         
                         local targ = game.Players[plr.Name]
                         if afon then
@@ -301,22 +326,10 @@ Combat:NewToggle("Aura","",function(cb)
                         if targ.leaderstats.Glove.Value == "OVERKILL" then
                             waittime = 0.085
                         end
-                        if auramode == "Sync" or auramode == "Legit" or auramode == "Semi-Legit" then
-                            if doSlapAnim then
-                                hit[glove()]:FireServer(targ.Character:FindFirstChild("Torso"))
-                                lplr.Character.Humanoid.Animator:LoadAnimation(game:GetService("ReplicatedStorage").Slap):Play()
-                                doSlapAnim = false
-                            end
-                        else
-                            local args = {
-                                [1] = targ
-                            }
-                            game:GetService("ReplicatedStorage"):WaitForChild("SM"):FireServer(unpack(args))
-                            hit[glove()]:FireServer(targ.Character:FindFirstChild("Head"))
-                            if doSlapAnim then
-                                lplr.Character.Humanoid.Animator:LoadAnimation(game:GetService("ReplicatedStorage").Slap):Play()
-                                doSlapAnim = false
-                            end
+                        if doSlapAnim then
+                            hit[glove()]:FireServer(targ.Character:FindFirstChild("Torso"))
+                            lplr.Character.Humanoid.Animator:LoadAnimation(game:GetService("ReplicatedStorage").Slap):Play()
+                            doSlapAnim = false
                         end
                     end
                 end
@@ -424,3 +437,26 @@ Auto:NewToggle("Tycoon","",function(cb)
         endLoop("tycoon")
     end
 end)
+local DiscordTab = Window:NewTab("Discord")
+local Discord = DiscordTab:NewSection("Discord")
+Discord:NewButton("Copy Discord Invite", "Copies the Qwertyware Discord invite", function()
+    setclipboard("https://discord.gg/AeXGDZZB")
+    game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = "Copied Qwertyware Discord Invite"})
+end)
+notif("Loaded!")
+if loadDebugMode then
+    local d1 = Window:NewTab("DEBUG")
+    local d2 = d1:NewSection("DEBUG")
+    d2:NewButton("Reload","",function(callback)
+        Library:ToggleUI()
+        notif("Reloading")
+        Combat = nil
+        gloves = nil
+        doLoop = nil
+        endLoop = nil
+        task.wait(0.1)
+        shared.debug = true
+        loadstring(readfile("qwertyware.txt"))()
+    end)
+    d2:NewLabel("Make sure to disable everything!")
+end

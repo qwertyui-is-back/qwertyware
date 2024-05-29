@@ -261,19 +261,11 @@ local aurticks = 0
 local afon = false
 local afticks = 0
 local annoying = false
-Auto:NewToggle("Annoying (AutoFarm)","",function(cb)
-    if cb then
-        amnoying = true
-    else
-        annoying = false
-    end
-end)
 local aftarget = plrs:GetPlayers()[math.random(1,#plrs:GetPlayers())]
 Auto:NewToggle("AutoFarm","",function(cb)
     if cb then
         afon = true
         doLoop("autofarm",function()
-            if annoying == true then game:GetService("ReplicatedStorage").rhythmevent:FireServer("AoeExplosion",0) end
             afticks += 1
             if afticks == 65 then
                 aftarget = plrs:GetPlayers()[math.random(1,#plrs:GetPlayers())]
@@ -284,6 +276,29 @@ Auto:NewToggle("AutoFarm","",function(cb)
                 lplr.Character.HumanoidRootPart.CFrame = CFrame.new(0,-5,0)
             else
                 lplr.Character.HumanoidRootPart.CFrame = aftarget.Character.HumanoidRootPart.CFrame
+            end
+        end)
+    else
+        endLoop("autofarm")
+        afon = false
+    end
+end)
+Auto:NewToggle("LoopFling All","",function(cb)
+    if cb then
+        afon = true
+        doLoop("autofarm",function()
+            afticks += 1
+            if afticks == 130 then
+                aftarget = plrs:GetPlayers()[math.random(1,#plrs:GetPlayers())]
+                afticks = 0
+            end
+            if aftarget.Character == nil or aftarget.Character.Humanoid.Health <= 1 or aftarget.Character.HumanoidRootPart.CFrame.Y <= -25 or aftarget.Character.HumanoidRootPart.CFrame.Y >= 65 or aftarget.leaderstats.Glove.Value == "Spectator" or not aftarget.Character.Head:FindFirstChild("UnoReverseCard") == nil then
+                aftarget = plrs:GetPlayers()[math.random(1,#plrs:GetPlayers())]
+                lplr.Character.HumanoidRootPart.CFrame = CFrame.new(0,-5,0)
+            else
+                lplr.Character.HumanoidRootPart.CFrame = aftarget.Character.HumanoidRootPart.CFrame
+                game:GetService("ReplicatedStorage").rhythmevent:FireServer("AoeExplosion",1)
+                game:GetService("ReplicatedStorage").rhythmevent:FireServer("AoeExplosion",0)
             end
         end)
     else
@@ -320,11 +335,15 @@ Combat:NewToggle("Aura","",function(cb)
                     if (auramode == "Normal" and dist <= 25 or auramode == "Legit" and dist <= 9.25 or auramode == "Semi-Legit" and dist <= 12.45) then
                         
                         local targ = game.Players[plr.Name]
-                        if afon then
+                        if afon and aftarget ~= nil then
                             targ = game.Players[aftarget.Name]
                         end
-                        if targ.leaderstats.Glove.Value == "OVERKILL" then
+                        if lplr.leaderstats.Glove.Value == "OVERKILL" then
                             waittime = 0.085
+                        elseif lplr.leaderstats.Glove.Value == "Bull" and auramode ~= "Normal" then
+                            waititme = 10
+                        elseif lplr.leaderstats.Glove.Value == "Speedrun" and auramode ~= "Normal" then
+                            waittime = 4
                         end
                         if doSlapAnim then
                             hit[glove()]:FireServer(targ.Character:FindFirstChild("Torso"))
@@ -354,9 +373,11 @@ doLoop("getpos",function()
 end)
 local velomode = "TP"
 local veloci
+local lagticks = 0
 lplr.CharacterAdded:Connect(function()
     task.wait(1)
     local ragdoll = lplr.Character.Ragdolled
+    local fps1 = getfpscap()
     lplr.Character.Ragdolled.Changed:Connect(function()
         if ragdoll.Value and veloci then
             if velomode == "TP" then
@@ -371,16 +392,37 @@ lplr.CharacterAdded:Connect(function()
                 repeat task.wait() until not ragdoll.Value or lplr.Character.Torso == nil
                 lplr.Character.Torso.Anchored = false
                 donerag = true
-            elseif velomode == "Legit" then
+            elseif velomode == "Lag" then
+                doLoop("Lag",function()
+                    lagticks += 1
+                    if lagticks == 6 then
+                        lplr.Character.Torso.Anchored = true
+                        notif("true")
+                    end
+                    if lagticks == 12 then
+                        lplr.Character.Torso.Anchored = false
+                        notif("false")
+                    end
+                    if lagticks == 17 then
+                        lplr.Character.Torso.Anchored = true
+                        notif("true")
+                    end
+                    if lagticks == 24 then
+                        lplr.Character.Torso.Anchored = false
+                        notif("false")
+                        lagticks = 0
+                    end
+                end)
                 task.wait(1)
                 repeat task.wait() until not ragdoll.Value
-                lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0,4,-2)
+                endLoop("Lag")
+                lplr.Character.Torso.Anchored = false
                 donerag = true
             end
         end
     end)
 end)
-Player:NewDropdown("Mode","", {"TP","Anchor","Legit"},function(cb)
+Player:NewDropdown("Mode","", {"TP","Anchor","Lag"},function(cb)
     velomode = cb
 end)
 Player:NewToggle("Velocity","",function(cb)
@@ -437,6 +479,39 @@ Auto:NewToggle("Tycoon","",function(cb)
         endLoop("tycoon")
     end
 end)
+Main:NewToggle("Among Us","turns everyone into among us",function(cb)
+    if cb then
+        doLoop("amogus",function()
+            for i,v in pairs(plrs:GetChildren()) do
+                if v.Character ~= nil and v.Character.Torso ~= nil and v.Character.Humanoid ~= nil and v.Character.Humanoid.Health ~= 0 then
+                    for o,b in pairs(v.Character:GetChildren()) do
+                        if b:IsA("Part") and b.Name ~= "amogus" then
+                            b.Transparency = 1
+                        elseif b:IsA("Accessory") then
+                            b.Handle.Transparency = 1
+                        end
+                    end
+                    if v.Character:FindFirstChild("amogus") == nil then
+                        local asset = "http://www.roblox.com/asset/?id=6235963214"
+                        local text = "http://www.roblox.com/asset/?id=6235963270"
+                        local part = Instance.new("Part",v.Character)
+                        part.Name = "amogus"
+                        local mesh = Instance.new("SpecialMesh",part)
+                        mesh.MeshId = asset
+                        mesh.TextureId = text
+                        mesh.Offset = Vector3.new(0,-0.3,0)
+                        mesh.Scale = Vector3.new(0.11,0.11,0.11)
+                        local weld = Instance.new("Weld",part)
+                        weld.Part0 = part
+                        weld.Part1 = part.Parent.HumanoidRootPart
+                    end
+                end
+            end
+        end)
+    else
+        endLoop("amogus")
+    end
+end)
 local DiscordTab = Window:NewTab("Discord")
 local Discord = DiscordTab:NewSection("Discord")
 Discord:NewButton("Copy Discord Invite", "Copies the Qwertyware Discord invite", function()
@@ -456,7 +531,7 @@ if loadDebugMode then
         endLoop = nil
         task.wait(0.1)
         shared.debug = true
-        loadstring(readfile("qwertyware.txt"))()
+        loadstring(readfile("qwertyware/games/SlapBattles.lua"))()
     end)
     d2:NewLabel("Make sure to disable everything!")
 end

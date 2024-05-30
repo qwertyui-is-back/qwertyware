@@ -42,16 +42,20 @@ local Player = PlayerTab:NewSection("Player")
 local WorldTab = Window:NewTab("World")
 local World = WorldTab:NewSection("World")
 local byp
-byp = hookmetamethod(game, "__namecall", function(method, ...) 
-if getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.Ban then
-    return
-    elseif getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.AdminGUI then
+if hookmetamethod ~= nil then
+    byp = hookmetamethod(game, "__namecall", function(method, ...) 
+    if getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.Ban then
         return
-    elseif getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.WalkSpeedChanged then
-        return
-    end
-    return byp(method, ...)
-end)
+        elseif getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.AdminGUI then
+            return
+        elseif getnamecallmethod() == "FireServer" and method == game.ReplicatedStorage.WalkSpeedChanged then
+            return
+        end
+        return byp(method, ...)
+    end)
+else
+    notif("Hookmetamethod not found, may have issues with being kicked")
+end
 local functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/cheesynob39/R20-EXPLOITER/main/Files/Functions.lua"))()
 local hit = {
     ["Default"] = game.ReplicatedStorage.b,
@@ -307,24 +311,25 @@ Auto:NewToggle("LoopFling All","",function(cb)
     end
 end)
 local auramode = "Normal"
-Combat:NewDropdown("Mode","", {"Normal","Legit","Semi-Legit"},function(cb)
+Combat:NewDropdown("Mode","", {"Normal","Safe","Legit","Semi-Legit"},function(cb)
     auramode = cb
 end)
 local doSlapAnim = false
 local waittime = 0.25
 local setvalue = 0.25
-Combat:NewSlider("Delay", "Doesn't apply to killstreak.", 100, 25, function(s) -- 500 (MaxValue) | 0 (MinValue)
+Combat:NewSlider("Delay", "Doesn't apply to killstreak.", 600, 25, function(s) -- 500 (MaxValue) | 0 (MinValue)
     setvalue = s/100
     waitime = s/100
 end)
 local ticks = 0
+local hitdelay = 15
 local dodge = false
 Combat:NewToggle("Aura","",function(cb)
     if cb then
         warn("on")
         doLoop("aura",function(delta)
             aurticks = aurticks + 1
-            print("looping")
+            --print("looping")
             for i,plr in next, plrs:GetPlayers() do
                 --warn("players done")
                 --print("went through players")
@@ -332,8 +337,8 @@ Combat:NewToggle("Aura","",function(cb)
                     local dist = (lplr.Character:FindFirstChild("HumanoidRootPart").Position - plr.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
                     --print("checks passed")
                     waittime = setvalue
-                    if (auramode == "Normal" and dist <= 25 or auramode == "Legit" and dist <= 9.25 or auramode == "Semi-Legit" and dist <= 12.45) then
-                        
+                    if (auramode == "Normal" and dist <= 25 or auramode == "Safe" and dist <= 15 or auramode == "Legit" and dist <= 9.25 or auramode == "Semi-Legit" and dist <= 12.45) then
+                        hitdelay -= 1
                         local targ = game.Players[plr.Name]
                         if afon and aftarget ~= nil then
                             targ = game.Players[aftarget.Name]
@@ -341,15 +346,26 @@ Combat:NewToggle("Aura","",function(cb)
                         if lplr.leaderstats.Glove.Value == "OVERKILL" then
                             waittime = 0.085
                         elseif lplr.leaderstats.Glove.Value == "Bull" and auramode ~= "Normal" then
-                            waititme = 10
+                            waittime = 16
+                        elseif lplr.leaderstats.Glove.Value == "Extended" and auramode ~= "Normal" then
+                            waittime = 16
                         elseif lplr.leaderstats.Glove.Value == "Speedrun" and auramode ~= "Normal" then
                             waittime = 4
                         end
-                        if doSlapAnim then
-                            hit[glove()]:FireServer(targ.Character:FindFirstChild("Torso"))
-                            lplr.Character.Humanoid.Animator:LoadAnimation(game:GetService("ReplicatedStorage").Slap):Play()
-                            doSlapAnim = false
+                        if doSlapAnim and hitdelay == 0 then
+                            if auramode == "Normal" then
+                                hit[glove()]:FireServer(targ.Character:FindFirstChild("Torso"))
+                                lplr.Character.Humanoid.Animator:LoadAnimation(game:GetService("ReplicatedStorage").Slap):Play()
+                                doSlapAnim = false
+                            else
+                                if targ.Character.Ragdolled ~= true then
+                                    hit[glove()]:FireServer(targ.Character:FindFirstChild("Torso"))
+                                    lplr.Character.Humanoid.Animator:LoadAnimation(game:GetService("ReplicatedStorage").Slap):Play()
+                                    doSlapAnim = false
+                                end
+                            end
                         end
+                        if hitdelay == 0 then hitdelay = 15 end
                     end
                 end
             end
@@ -366,18 +382,25 @@ Combat:NewToggle("Aura","",function(cb)
 end)
 local donerag = true
 local pos
+local pos2
 doLoop("getpos",function()
-    if not lplr.Character.Ragdolled.Value and donerag then
-        pos = lplr.Character.HumanoidRootPart.CFrame
+    if lplr.Character ~= nil and lplr.Character.Ragdolled ~= nil then
+        if not lplr.Character.Ragdolled.Value and donerag then
+            pos = lplr.Character.HumanoidRootPart.CFrame
+        end
+    end
+    if lplr.Character ~= nil and lplr.Character.Humanoid ~= nil then
+        if lplr.Character.Humanoid.FloorMaterial ~= "Air" then
+            pos2 = lplr.Character.HumanoidRootPart.CFrame
+        end
     end
 end)
 local velomode = "TP"
-local veloci
+local veloci = false
 local lagticks = 0
 lplr.CharacterAdded:Connect(function()
     task.wait(1)
     local ragdoll = lplr.Character.Ragdolled
-    local fps1 = getfpscap()
     lplr.Character.Ragdolled.Changed:Connect(function()
         if ragdoll.Value and veloci then
             if velomode == "TP" then
@@ -397,24 +420,20 @@ lplr.CharacterAdded:Connect(function()
                     lagticks += 1
                     if lagticks == 6 then
                         lplr.Character.Torso.Anchored = true
-                        notif("true")
                     end
-                    if lagticks == 12 then
+                    if lagticks == 9 then
                         lplr.Character.Torso.Anchored = false
-                        notif("false")
                     end
-                    if lagticks == 17 then
+                    if lagticks == 14 then
                         lplr.Character.Torso.Anchored = true
-                        notif("true")
                     end
-                    if lagticks == 24 then
+                    if lagticks == 19 then
                         lplr.Character.Torso.Anchored = false
-                        notif("false")
                         lagticks = 0
                     end
                 end)
                 task.wait(1)
-                repeat task.wait() until not ragdoll.Value
+                repeat task.wait() until not ragdoll.Value or lplr.Character.Torso == nil
                 endLoop("Lag")
                 lplr.Character.Torso.Anchored = false
                 donerag = true
@@ -422,7 +441,7 @@ lplr.CharacterAdded:Connect(function()
         end
     end)
 end)
-Player:NewDropdown("Mode","", {"TP","Anchor","Lag"},function(cb)
+Player:NewDropdown("Velocity Mode","", {"TP","Anchor","Lag"},function(cb)
     velomode = cb
 end)
 Player:NewToggle("Velocity","",function(cb)
@@ -431,6 +450,41 @@ Player:NewToggle("Velocity","",function(cb)
         veloci = true
     else
         veloci = false
+    end
+end)
+local nsm = "TP"
+Player:NewDropdown("NoSlow Mode","",{"TP","Loop"},function(mode)
+    nsm = mode
+end)
+Player:NewToggle("NoSlow","",function(cb)
+    if cb then
+        doLoop("NoSlow",function()
+            if nsm == "TP" then
+                for i,v in pairs(lplr.Character:GetChildren()) do
+                    if v:IsA("BasePart") then
+                        --v.Anchored = false
+                    end
+                end
+                nasv = lplr.Character.Humanoid.WalkSpeed
+                if lplr.Character.Humanoid.WalkSpeed < 20 then
+                    lplr.Character.Humanoid.WalkSpeed = 20
+                end
+                if lplr.Character.Humanoid.FloorMaterial == Air then
+                    nasv = lplr.Character.Humanoid.WalkSpeed + 2
+                end
+                local newvelo = lplr.Character.Humanoid.MoveDirection * nasv
+                lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+                if autoj and (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.zero then
+                    if realjump then lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) else lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, jumpheight, lplr.Character.HumanoidRootPart.Velocity.Z) end
+                end
+            elseif nsm == "Loop" then
+                if lplr.Character.Humanoid.WalkSpeed < 20 then
+                    lplr.Character.Humanoid.WalkSpeed = 20
+                end
+            end
+        end)
+    else
+        endLoop("NoSlow")
     end
 end)
 local part
@@ -443,6 +497,11 @@ World:NewToggle("AntiVoid","",function(cb)
         part.Size = Vector3.new(2048,1,2048)
         part.CanCollide = true
         part.Transparency = 0.5
+        part.Touched:Connect(function(part)
+            if part.Parent.Name == lplr.Name then
+                lplr.Character.HumanoidRootPart.CFrame = pos2
+            end
+        end)
         part2 = Instance.new("Part",workspace)
         part2.Anchored = true
         part2.CFrame = CFrame.new(0,-77.5,0)
@@ -450,6 +509,7 @@ World:NewToggle("AntiVoid","",function(cb)
         part2.CanCollide = true
         part2.Transparency = 0.5
     else
+        part.Touched:Disconnect()
         part:Destroy()
         part2:Destroy()
     end
@@ -459,8 +519,12 @@ World:NewToggle("AutoSlapple","",function(cb)
         doLoop("slapple",function()
             for i,v in next, workspace.Arena.island5.Slapples:GetDescendants() do
                 if v.ClassName == "TouchTransmitter" then
-                    firetouchinterest(lplr.Character.Head, v.Parent, 1)
-                    firetouchinterest(lplr.Character.Head, v.Parent, 0)
+                    if firetouchinterest ~= nil then
+                        firetouchinterest(lplr.Character.Head, v.Parent, 1)
+                        firetouchinterest(lplr.Character.Head, v.Parent, 0)
+                    else
+                        lplr.Character.HumanoidRootPart.CFrame = v.Parent.CFrame
+                    end
                 end
             end
         end)
@@ -483,7 +547,7 @@ Main:NewToggle("Among Us","turns everyone into among us",function(cb)
     if cb then
         doLoop("amogus",function()
             for i,v in pairs(plrs:GetChildren()) do
-                if v.Character ~= nil and v.Character.Torso ~= nil and v.Character.Humanoid ~= nil and v.Character.Humanoid.Health ~= 0 then
+                if v.Character.Humanoid ~= nil and (v.Character ~= nil and v.Character.Torso ~= nil and v.Character.Humanoid ~= nil and v.Character.Humanoid.Health ~= 0) then
                     for o,b in pairs(v.Character:GetChildren()) do
                         if b:IsA("Part") and b.Name ~= "amogus" then
                             b.Transparency = 1
@@ -515,8 +579,8 @@ end)
 local DiscordTab = Window:NewTab("Discord")
 local Discord = DiscordTab:NewSection("Discord")
 Discord:NewButton("Copy Discord Invite", "Copies the Qwertyware Discord invite", function()
-    setclipboard("https://discord.gg/AeXGDZZB")
-    game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = "Copied Qwertyware Discord Invite"})
+    setclipboard("https://discord.gg/QCj5rzTX")
+    notif("Copied qwertyware invite!")
 end)
 notif("Loaded!")
 if loadDebugMode then

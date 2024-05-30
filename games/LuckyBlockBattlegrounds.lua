@@ -34,7 +34,7 @@ local Window = Library.CreateLib("qwertyware - 1.1", colors)
 local MainTab = Window:NewTab("Main")
 local Main = MainTab:NewSection("Main")
 local AutoTab = Window:NewTab("Automated")
-            
+local Auto = AutoTab:NewSection("Automated")
 local lucky = game:GetService("ReplicatedStorage").SpawnLuckyBlock
 local superblock = game:GetService("ReplicatedStorage").SpawnSuperBlock
 local diamond = game:GetService("ReplicatedStorage").SpawnDiamondBlock

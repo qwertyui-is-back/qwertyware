@@ -34,6 +34,7 @@ local Window = Library.CreateLib("qwertyware - 1.1", colors)
 local MainTab = Window:NewTab("Main")
 local Main = MainTab:NewSection("Main")
 local AutoTab = Window:NewTab("Automated")
+local Auto = AutoTab:NewSection("AutoMated")
 Main:NewButton("ShelterTP","does what it says",function()
     lplr.Character.HumanoidRootPart.CFrame = CFrame.new(75494, 31957, -142) -- nvm
 end)

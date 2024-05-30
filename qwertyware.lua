@@ -1,7 +1,8 @@
 --[[
 #
 Main Developer: qwertyui#4134
-Developer: hax#2530
+CREDITS
+7GrandDad's VapeV4ForRoblox
 #
 ]]--
 local identity = 1
@@ -486,19 +487,13 @@ local function crypt_hash(h)
         num2s(l[8], 4)
     )
 end
-
+-- actual script
 if shared.debug then
     loadDebugMode = true
     loadWorkspace = true
 else
     loadDebugMode = false
     loadWorkspace = true
-end
-if not isfolder("qwertyware") or not isfolder("qwertyware/games") then
-    print("LOAD")
-    warn("We are currently creating files needed for running qwertyware. Please be patient.")
-    loadstring(readfile("setup.txt"))()
-    return
 end
 local function notif(text)
 	game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = text})
@@ -510,7 +505,7 @@ local ids = {
 	TornadoAlleyUltimate = 2313058949,
 	LuckyBlockBattlegrounds = 662417684,
     SlapBattles = 6403373529,
-    SlapBattlesKS = 9015014224, -- Killstreak Only
+    SlapBattlesKS = 1152017397, -- Killstreak Only
     SlapBattlesNOS = 2380077519 -- No one shots
 }
 notif("Loading gui")
@@ -541,7 +536,7 @@ local function loadScript(name)
     if loadDebugMode then
         loadstring(readfile("qwertyware/games/"..name..".lua"))()
     else
-
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/qwertyware/main/games/"..name..".lua",true))()
     end
 end
 for i,v in pairs(ids) do
@@ -553,35 +548,18 @@ for i,v in pairs(ids) do
         task.wait(2)
 		if i == "TornadoAlleyUltimate" then
             loadScript("TornadoAlleyUltimate")
-        elseif i == "SlapBattles" or i == "SlapBattlesKS" or i == "SlapBattlesNOS" then
+        elseif i == "SlapBattles" then
+            loadScript("SlapBattles")
+        elseif i == "SlapBattlesKS" then
+            loadScript("SlapBattles")
+        elseif i == "SlapBattlesNOS" then
             loadScript("SlapBattles")
 		elseif i == "LuckyBlockBattlegrounds" then
             loadScript("LuckyBlockBattlegrounds")
 		end
 	end
 end
-local DiscordTab = Window:NewTab("Discord")
-local Discord = DiscordTab:NewSection("Discord")
-Discord:NewButton("Copy Discord Invite", "Copies the Qwertyware Discord invite", function()
-    setclipboard("https://discord.gg/AeXGDZZB")
-    game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = "Copied Qwertyware Discord Invite"})
-end)
 if wronggame then
-	game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = "Unsupported Game!"})
-end
-if loadDebugMode then
-    local d1 = Window:NewTab("DEBUG")
-    local d2 = d1:NewSection("DEBUG")
-    d2:NewButton("Reload","",function(callback)
-        Library:ToggleUI()
-        notif("Reloading")
-        Combat = nil
-        gloves = nil
-        doLoop = nil
-        endLoop = nil
-        task.wait(0.1)
-        shared.debug = true
-        loadstring(readfile("qwertyware.txt"))()
-    end)
-    d2:NewLabel("Make sure to disable everything!")
+	game.StarterGui:SetCore("SendNotification", {Title = "qwertyware", Text = "Unsupported Game! Discord invite copied, join the server to see what games are supported!"})
+    setclipboard("https://discord.gg/QCj5rzTX")
 end

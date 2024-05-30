@@ -94,3 +94,10 @@ Auto:NewToggle("AutoOpenBlock","does what it says",function(callback)
         aob = false
     end
 end)
+local DiscordTab = Window:NewTab("Discord")
+local Discord = DiscordTab:NewSection("Discord")
+Discord:NewButton("Copy Discord Invite", "Copies the Qwertyware Discord invite", function()
+    setclipboard("https://discord.gg/QCj5rzTX")
+    notif("Copied qwertyware invite!")
+end)
+notif("Loaded!")
